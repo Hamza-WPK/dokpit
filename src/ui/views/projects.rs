@@ -179,6 +179,10 @@ impl Component for ProjectsView {
             }
         };
         let list = gtk::ListBox::new();
+        let pane = detail::Pane::new({
+            let list = list.clone();
+            move || list.unselect_all()
+        });
         let on_select = list.connect_row_selected({
             let sender = sender.clone();
             move |_, row| sender.input(Msg::Select(row.map(|r| r.widget_name().into())))
@@ -193,7 +197,7 @@ impl Component for ProjectsView {
             selected: None,
             list,
             on_select,
-            pane: detail::Pane::default(),
+            pane,
         };
         model.reload();
         model.render(&sender);

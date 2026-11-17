@@ -129,6 +129,10 @@ impl Component for ImagesView {
     fn init(ctx: AppCtx, root: Self::Root, sender: ComponentSender<Self>) -> ComponentParts<Self> {
         ctx.on_change(&sender, &[Kind::IMAGE, Kind::CONTAINER], Cmd::Refresh);
         let list = gtk::ListBox::new();
+        let pane = detail::Pane::new({
+            let list = list.clone();
+            move || list.unselect_all()
+        });
         let on_select = list.connect_row_selected({
             let sender = sender.clone();
             move |_, row| sender.input(Msg::Select(row.map(|r| r.index() as usize)))
@@ -145,7 +149,7 @@ impl Component for ImagesView {
             progress: String::new(),
             list,
             on_select,
-            pane: detail::Pane::default(),
+            pane,
             pull_entry: gtk::Entry::new(),
         };
         let list = &model.list;

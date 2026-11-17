@@ -12,7 +12,7 @@ use relm4::prelude::*;
 use crate::context::{AppCtx, Kind};
 use crate::core;
 use crate::ui::confirm::{Confirm, confirm};
-use crate::ui::{self, detail};
+use crate::ui;
 use crate::core::networks::{self as model, Member, NetRow};
 
 pub struct NetworksView {
@@ -149,10 +149,9 @@ impl Component for NetworksView {
             },
             #[wrap(Some)]
             set_end_child = &gtk::Stack {
-                add_named: (&detail::placeholder(), Some("empty")),
                 add_named: (&detail_page, Some("detail")),
                 #[watch]
-                set_visible_child_name: if model.current().is_some() { "detail" } else { "empty" },
+                set_visible: model.current().is_some(),
             },
         },
 
@@ -163,12 +162,23 @@ impl Component for NetworksView {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 12,
                 set_margin_all: 18,
-                gtk::Label {
-                    add_css_class: "title-2",
-                    set_xalign: 0.0,
-                    set_selectable: true,
-                    #[watch]
-                    set_label: model.selected.as_deref().unwrap_or_default(),
+                gtk::Box {
+                    set_spacing: 6,
+                    gtk::Label {
+                        add_css_class: "title-2",
+                        set_hexpand: true,
+                        set_xalign: 0.0,
+                        set_selectable: true,
+                        #[watch]
+                        set_label: model.selected.as_deref().unwrap_or_default(),
+                    },
+                    gtk::Button {
+                        set_icon_name: "window-close-symbolic",
+                        set_tooltip_text: Some("Close details"),
+                        set_valign: gtk::Align::Start,
+                        add_css_class: "flat",
+                        connect_clicked[list] => move |_| list.unselect_all(),
+                    },
                 },
                 gtk::Label {
                     add_css_class: "dim-label",

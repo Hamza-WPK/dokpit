@@ -95,6 +95,10 @@ impl Component for VolumesView {
     fn init(ctx: AppCtx, root: Self::Root, sender: ComponentSender<Self>) -> ComponentParts<Self> {
         ctx.on_change(&sender, &[Kind::VOLUME, Kind::CONTAINER], Cmd::Refresh);
         let list = gtk::ListBox::new();
+        let pane = detail::Pane::new({
+            let list = list.clone();
+            move || list.unselect_all()
+        });
         let on_select = list.connect_row_selected({
             let sender = sender.clone();
             move |_, row| sender.input(Msg::Select(row.map(|r| r.widget_name().into())))
@@ -107,7 +111,7 @@ impl Component for VolumesView {
             selected: None,
             list,
             on_select,
-            pane: detail::Pane::default(),
+            pane,
         };
         let list = &model.list;
         let widgets = view_output!();

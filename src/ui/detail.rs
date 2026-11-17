@@ -37,11 +37,13 @@ pub struct Pane {
     body: gtk::Box,
 }
 
-impl Default for Pane {
-    fn default() -> Self {
+impl Pane {
+    /// `on_close` runs when the user clicks the close button.
+    pub fn new(on_close: impl Fn() + 'static) -> Self {
         let title = gtk::Label::builder()
             .css_classes(["title-2"])
             .xalign(0.0)
+            .hexpand(true)
             .selectable(true)
             .wrap(true)
             .wrap_mode(gtk::pango::WrapMode::WordChar)
@@ -52,17 +54,26 @@ impl Default for Pane {
         content.set_margin_bottom(18);
         content.set_margin_start(18);
         content.set_margin_end(18);
-        content.append(&title);
+        let close = gtk::Button::builder()
+            .icon_name("window-close-symbolic")
+            .tooltip_text("Close details")
+            .valign(gtk::Align::Start)
+            .css_classes(["flat"])
+            .build();
+        close.connect_clicked(move |_| on_close());
+        let header = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        header.append(&title);
+        header.append(&close);
+        content.append(&header);
         content.append(&body);
         let scroll = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&content).build();
         let stack = gtk::Stack::new();
         stack.add_named(&placeholder(), Some("empty"));
         stack.add_named(&scroll, Some("detail"));
+        stack.set_visible(false);
         Self { stack, title, body }
     }
-}
 
-impl Pane {
     pub fn widget(&self) -> &gtk::Stack {
         &self.stack
     }
@@ -71,9 +82,10 @@ impl Pane {
         self.title.set_label(title);
         fill(&self.body, sections);
         self.stack.set_visible_child_name("detail");
+        self.stack.set_visible(true);
     }
 
     pub fn clear(&self) {
-        self.stack.set_visible_child_name("empty");
+        self.stack.set_visible(false);
     }
 }
