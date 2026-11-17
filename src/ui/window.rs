@@ -125,7 +125,7 @@ impl Component for App {
         let ctx = AppCtx::new(notices);
         relm4::spawn_local(notices_rx.forward(sender.input_sender().clone(), AppMsg::Notice));
 
-        let views_stack = gtk::Stack::new();
+        let views_stack = gtk::Stack::builder().hhomogeneous(false).vhomogeneous(false).build();
         let add = |widget: &gtk::Paned, name: &str, title: &str| {
             views_stack.add_titled(widget, Some(name), title);
         };

@@ -23,12 +23,12 @@ pub fn group_header(group: &Group, open: bool, collapsible: bool, zebra: bool, s
     label.append(&dot(up > 0));
     label.append(&gtk::Label::builder().label(group.project.as_deref().unwrap_or("Standalone")).css_classes(["heading"]).build());
     label.append(&gtk::Label::builder().label(format!("{up}/{total}")).css_classes(["dp-pill", core::state_class(Some((up, total)))]).build());
-    let toggle = gtk::Button::builder().child(&label).css_classes(["flat"]).sensitive(collapsible).build();
+    let toggle = gtk::Button::builder().child(&label).css_classes(["flat"]).sensitive(collapsible).hexpand(true).build();
+    label.set_halign(gtk::Align::Start);
     let (project, s) = (group.project.clone(), sender.clone());
     toggle.connect_clicked(move |_| s.input(Msg::Toggle(project.clone())));
 
     let actions = group_actions(group, sender);
-    actions.set_hexpand(true);
     actions.set_halign(gtk::Align::End);
 
     let header = gtk::Box::new(gtk::Orientation::Horizontal, 6);

@@ -66,6 +66,11 @@ pub enum Msg {
 }
 
 #[derive(Debug)]
+pub enum Out {
+    Close,
+}
+
+#[derive(Debug)]
 pub enum Cmd {
     Event { id: String, action: String },
     Resync,
@@ -78,7 +83,7 @@ pub enum Cmd {
 impl Component for Details {
     type Init = AppCtx;
     type Input = Msg;
-    type Output = ();
+    type Output = Out;
     type CommandOutput = Cmd;
 
     view! {
@@ -90,11 +95,23 @@ impl Component for Details {
                     set_orientation: gtk::Orientation::Vertical,
                     set_spacing: 6,
                     set_margin_all: 6,
-                    gtk::Label {
-                        set_ellipsize: gtk::pango::EllipsizeMode::Middle,
-                        add_css_class: "dp-detail-name",
-                        #[watch]
-                        set_label: &model.name,
+                    gtk::Box {
+                        gtk::Label {
+                            set_hexpand: true,
+                            set_ellipsize: gtk::pango::EllipsizeMode::Middle,
+                            add_css_class: "dp-detail-name",
+                            #[watch]
+                            set_label: &model.name,
+                        },
+                        gtk::Button {
+                            set_icon_name: "window-close-symbolic",
+                            set_tooltip_text: Some("Close details"),
+                            set_valign: gtk::Align::Center,
+                            add_css_class: "flat",
+                            connect_clicked[sender] => move |_| {
+                                let _ = sender.output(Out::Close);
+                            },
+                        },
                     },
                     adw::ViewSwitcher {
                         set_halign: gtk::Align::Center,

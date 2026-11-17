@@ -37,6 +37,7 @@ pub enum Msg {
     Filter(String),
     Toggle(Option<String>),
     Select(String),
+    CloseDetails,
     Start(String),
     Stop(String),
     Restart(String),
@@ -105,6 +106,7 @@ impl ContainersView {
             return;
         }
         self.details.emit(details::Msg::Show(id.clone()));
+        self.details.widget().set_visible(id.is_some());
         self.selected = id;
     }
 
@@ -123,7 +125,9 @@ impl ContainersView {
                 self.groups.append(&rows::group_list(&group, self.selected(), sender));
             }
         }
+        // Content is rebuilt, so the adjustment is clamped to 0 until layout runs; restore afterwards.
         adj.set_value(pos);
+        glib::idle_add_local_once(move || adj.set_value(pos));
     }
 
     fn shell(&self, id: &str) {
@@ -194,7 +198,8 @@ impl Component for ContainersView {
         let summary = gtk::Label::default();
         groups.set_margin_all(12);
         let scroll = gtk::ScrolledWindow::builder().child(&groups).build();
-        let details = details::Details::builder().launch(ctx.clone()).detach();
+        let details = details::Details::builder().launch(ctx.clone()).forward(sender.input_sender(), |_| Msg::CloseDetails);
+        details.widget().set_visible(false);
         let model = Self {
             ctx,
             containers: Vec::new(),
@@ -225,6 +230,10 @@ impl Component for ContainersView {
                 self.render(&sender);
             }
             Msg::Select(id) => self.set_selected(Some(id)),
+            Msg::CloseDetails => {
+                self.set_selected(None);
+                self.render(&sender);
+            }
             Msg::Start(id) => run(&self.ctx, &sender, Op::Start, vec![id], false, "Start container", "Container started"),
             Msg::Stop(id) => run(&self.ctx, &sender, Op::Stop, vec![id], false, "Stop container", "Container stopped"),
             Msg::Restart(id) => {
